@@ -1,9 +1,24 @@
 'use strict';
-const http = require('http');
-const PORT = process.env.PORT || 3000;
-http.createServer((req, res) => {
-  res.writeHead(200);
-  res.end('Hostinger is working on port ' + PORT);
-}).listen(PORT, () => {
-  console.log('Test server running on port ' + PORT);
+const { spawn } = require('child_process');
+const path = require('path');
+
+process.on('uncaughtException', (err) => {
+  process.stderr.write('UNCAUGHT: ' + err.stack + '\n');
+  process.exit(1);
+});
+
+const strapi = spawn(
+  path.join(__dirname, 'node_modules', '.bin', 'strapi'),
+  ['start'],
+  { cwd: __dirname, env: process.env, stdio: 'inherit' }
+);
+
+strapi.on('error', (err) => {
+  console.error('Failed to start Strapi:', err);
+  process.exit(1);
+});
+
+strapi.on('close', (code) => {
+  console.log('Strapi exited with code', code);
+  process.exit(code);
 });
