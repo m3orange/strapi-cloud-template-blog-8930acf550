@@ -5,24 +5,36 @@ const fs = require('fs');
 const http = require('http');
 
 const PORT = process.env.PORT || 3000;
-const strapiBin = path.join(__dirname, 'node_modules', '.bin', 'strapi');
 
-function runStrapi(args) {
-  // Resolve symlink to actual JS file, run with Node directly (bypasses shebang issues)
-  let bin = strapiBin;
-  try { bin = fs.realpathSync(strapiBin); } catch(e) {}
-  return { bin, args };
+function resolvedBin(name) {
+  const bin = path.join(__dirname, 'node_modules', '.bin', name);
+  try { return fs.realpathSync(bin); } catch(e) { return bin; }
+}
+
+function fixPermissions() {
+  const bins = [
+    path.join(__dirname, 'node_modules', '@esbuild', 'linux-x64', 'bin', 'esbuild'),
+    resolvedBin('strapi'),
+  ];
+  bins.forEach(b => {
+    if (fs.existsSync(b)) {
+      try { fs.chmodSync(b, '755'); console.log('chmod 755:', b); }
+      catch(e) { console.log('chmod failed for', b, e.message); }
+    }
+  });
 }
 
 function startStrapi() {
   console.log('Starting Strapi on port ' + PORT);
-  const { bin, args } = runStrapi(['start']);
-  const proc = spawn(process.execPath, [bin, ...args], {
+  const bin = resolvedBin('strapi');
+  const proc = spawn(process.execPath, [bin, 'start'], {
     cwd: __dirname, env: process.env, stdio: 'inherit'
   });
   proc.on('error', (err) => { console.error('Start error:', err.message); process.exit(1); });
   proc.on('close', (code) => { process.exit(code); });
 }
+
+fixPermissions();
 
 if (fs.existsSync(path.join(__dirname, 'dist'))) {
   startStrapi();
@@ -33,8 +45,7 @@ if (fs.existsSync(path.join(__dirname, 'dist'))) {
     res.end('Starting up, please wait...');
   }).listen(PORT, () => console.log('Placeholder on port ' + PORT));
 
-  const { bin } = runStrapi([]);
-  console.log('Running build via:', process.execPath, bin);
+  const bin = resolvedBin('strapi');
   const result = spawnSync(process.execPath, [bin, 'build'], {
     cwd: __dirname, env: process.env, stdio: 'inherit'
   });
