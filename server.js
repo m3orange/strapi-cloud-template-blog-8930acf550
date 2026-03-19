@@ -62,6 +62,8 @@ if (fs.existsSync(path.join(__dirname, 'dist'))) {
   });
   console.log('Build exit status:', result.status, '| error:', result.error ? result.error.message : 'none');
 
+  // Force-close any lingering connections so close() callback fires immediately
+  placeholder.closeAllConnections();
   placeholder.close(() => {
     setTimeout(() => {
       if (result.status !== 0) { console.error('Build failed'); process.exit(1); }
