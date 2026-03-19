@@ -1,24 +1,28 @@
 'use strict';
-const { spawn } = require('child_process');
+const fs = require('fs');
+const http = require('http');
 const path = require('path');
 
-process.on('uncaughtException', (err) => {
-  process.stderr.write('UNCAUGHT: ' + err.stack + '\n');
-  process.exit(1);
-});
+const PORT = process.env.PORT || 3000;
 
-const strapi = spawn(
-  path.join(__dirname, 'node_modules', '.bin', 'strapi'),
-  ['start'],
-  { cwd: __dirname, env: process.env, stdio: 'inherit' }
-);
+// Gather diagnostic info
+const strapiBin = path.join(__dirname, 'node_modules', '.bin', 'strapi');
+const distDir = path.join(__dirname, 'dist');
 
-strapi.on('error', (err) => {
-  console.error('Failed to start Strapi:', err);
-  process.exit(1);
-});
+const info = {
+  port: PORT,
+  nodeVersion: process.version,
+  cwd: process.cwd(),
+  dirname: __dirname,
+  strapiBinExists: fs.existsSync(strapiBin),
+  distExists: fs.existsSync(distDir),
+  distContents: fs.existsSync(distDir) ? fs.readdirSync(distDir) : 'NOT FOUND',
+  envVars: Object.keys(process.env)
+    .filter(k => k.startsWith('DATABASE') || ['PORT','NODE_ENV','HOST'].includes(k))
+    .reduce((a, k) => ({ ...a, [k]: process.env[k] }), {})
+};
 
-strapi.on('close', (code) => {
-  console.log('Strapi exited with code', code);
-  process.exit(code);
-});
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(info, null, 2));
+}).listen(PORT, () => console.log('Debug server on port ' + PORT));
