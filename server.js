@@ -19,7 +19,7 @@ function fixPermissions() {
   bins.forEach(b => {
     if (fs.existsSync(b)) {
       try { fs.chmodSync(b, '755'); console.log('chmod 755:', b); }
-      catch(e) { console.log('chmod failed for', b, e.message); }
+      catch(e) { console.log('chmod failed:', b, e.message); }
     }
   });
 }
@@ -28,10 +28,21 @@ function startStrapi() {
   console.log('Starting Strapi on port ' + PORT);
   const bin = resolvedBin('strapi');
   const proc = spawn(process.execPath, [bin, 'start'], {
-    cwd: __dirname, env: process.env, stdio: 'inherit'
+    cwd: __dirname, env: process.env, stdio: ['inherit', 'inherit', 'pipe']
   });
-  proc.on('error', (err) => { console.error('Start error:', err.message); process.exit(1); });
-  proc.on('close', (code) => { process.exit(code); });
+
+  let stderrBuf = '';
+  proc.stderr.on('data', d => {
+    stderrBuf += d.toString();
+    process.stderr.write(d);
+  });
+
+  proc.on('error', (err) => { console.error('Spawn error:', err.message); process.exit(1); });
+  proc.on('close', (code, signal) => {
+    console.error('Strapi exited — code:', code, '| signal:', signal);
+    if (stderrBuf) console.error('stderr:', stderrBuf.slice(-1000));
+    process.exit(1);
+  });
 }
 
 fixPermissions();
