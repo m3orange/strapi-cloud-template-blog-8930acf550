@@ -5,19 +5,26 @@
     "singularName": "about",
     "pluralName": "abouts",
     "displayName": "About",
-    "description": "Write about yourself and the content you create"
+    "description": "About page content"
   },
   "options": {
-    "draftAndPublish": false
+    "draftAndPublish": true
   },
   "pluginOptions": {},
   "attributes": {
-    "title": {
-      "type": "string"
+    "bio": {
+      "type": "text"
     },
-    "blocks": {
-      "type": "dynamiczone",
-      "components": ["shared.media", "shared.quote", "shared.rich-text", "shared.slider"]
+    "skills": {
+      "type": "json"
+    },
+    "experience": {
+      "type": "json"
+    },
+    "photo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
     }
   }
 }

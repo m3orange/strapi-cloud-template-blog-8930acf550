@@ -1,0 +1,60 @@
+{
+    "kind": "collectionType",
+    "collectionName": "projects",
+    "info": {
+        "singularName": "project",
+        "pluralName": "projects",
+        "displayName": "Project"
+    },
+    "options": {
+        "draftAndPublish": true
+    },
+    "pluginOptions": {},
+    "attributes": {
+        "title": {
+            "type": "string",
+            "required": true
+        },
+        "slug": {
+            "type": "uid",
+            "targetField": "title",
+            "required": true
+        },
+        "description": {
+            "type": "string"
+        },
+        "category": {
+            "type": "string"
+        },
+        "tags": {
+            "type": "string"
+        },
+        "year": {
+            "type": "string"
+        },
+        "client": {
+            "type": "string"
+        },
+        "role": {
+            "type": "string"
+        },
+        "caseStudyContent": {
+            "type": "richtext"
+        },
+        "featured": {
+            "type": "boolean",
+            "default": false
+        },
+        "protected": {
+            "type": "boolean",
+            "default": false
+        },
+        "coverImage": {
+            "type": "media",
+            "multiple": false,
+            "allowedTypes": [
+                "images"
+            ]
+        }
+    }
+}
